@@ -111,4 +111,33 @@ public class CNF
         builder.Length -= separator.Length;
         return builder.ToString();
     }
+
+    public class CNFComparer : IEqualityComparer<CNF>
+    {
+        private Clause.ClauseComparer _clauseComparer;
+        
+        public CNFComparer(Clause.ClauseComparer clauseComparer)
+        {
+            _clauseComparer = clauseComparer;
+        }
+
+        public bool Equals(CNF x, CNF y)
+        {
+            if (x._literals.Count != y._literals.Count || x._clauses.Count != y._clauses.Count)
+                return false;
+
+            var curLitArr = x._literals.OrderBy(lit => lit.Index);
+            var otherLitArr = y._literals.OrderBy(lit => lit.Index).ToArray();
+            
+            if (curLitArr.Where(
+                    (literal, i) => literal.Sign != otherLitArr[i].Sign || literal.Index != otherLitArr[i].Index).Any())
+                return false;
+
+            var shared = x._clauses.Intersect(y._clauses, _clauseComparer);
+
+            return x._clauses.Count == y._clauses.Count && shared.Count() == x._clauses.Count;
+        }
+
+        public int GetHashCode(CNF obj) => HashCode.Combine(obj._literals, obj._clauses);
+    }
 }
