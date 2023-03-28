@@ -1,0 +1,23 @@
+name: .NET
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 7.x
+      - name: Build
+        run: $slnInFolder = Get-ChildItem -Recurse -Filter '*.sln'; foreach ($file in $slnInFolder) {dotnet build $file.FullName}
+        shell: pwsh
+      - name: Test
+        run: $slnInFolder = Get-ChildItem -Recurse -Filter '*.sln'; foreach ($file in $slnInFolder) {dotnet test $file.FullName}
+        shell: pwsh
