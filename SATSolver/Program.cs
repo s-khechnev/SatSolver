@@ -1,11 +1,9 @@
 ﻿using SATSolver;
 
-var filePath = Console.ReadLine();
+if (args.Length is 0 or > 1)
+    throw new ArgumentException("Wrong args");
 
-if (string.IsNullOrEmpty(filePath))
-    throw new ArgumentException("Empty file path");
-
-filePath = filePath.Replace("\"", "");
+var filePath = args[0].Replace("\"", "");
 
 if (!File.Exists(filePath))
     throw new ArgumentException("File not exists");
