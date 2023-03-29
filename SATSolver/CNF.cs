@@ -115,20 +115,25 @@ public class CNF
     public class CNFComparer : IEqualityComparer<CNF>
     {
         private Clause.ClauseComparer _clauseComparer;
-        
+
         public CNFComparer(Clause.ClauseComparer clauseComparer)
         {
             _clauseComparer = clauseComparer;
         }
 
-        public bool Equals(CNF x, CNF y)
+        public bool Equals(CNF? x, CNF? y)
         {
+            if (ReferenceEquals(x, y)) return true;
+            if (ReferenceEquals(x, null)) return false;
+            if (ReferenceEquals(y, null)) return false;
+            if (x.GetType() != y.GetType()) return false;
+
             if (x._literals.Count != y._literals.Count || x._clauses.Count != y._clauses.Count)
                 return false;
 
             var curLitArr = x._literals.OrderBy(lit => lit.Index);
             var otherLitArr = y._literals.OrderBy(lit => lit.Index).ToArray();
-            
+
             if (curLitArr.Where(
                     (literal, i) => literal.Sign != otherLitArr[i].Sign || literal.Index != otherLitArr[i].Index).Any())
                 return false;

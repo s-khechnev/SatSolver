@@ -38,7 +38,7 @@ public class Clause : ICloneable
 
     public class ClauseComparer : IEqualityComparer<Clause>
     {
-        public bool Equals(Clause x, Clause y)
+        public bool Equals(Clause? x, Clause? y)
         {
             if (ReferenceEquals(x, y)) return true;
             if (ReferenceEquals(x, null)) return false;
