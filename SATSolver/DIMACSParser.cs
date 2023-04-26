@@ -80,11 +80,11 @@ public class DIMACSParser
         return new CNF(clauses);
     }
 
-    public static void WriteModelToConsole(List<(int, bool)>? model)
+    public static void WriteModel(Action<string> writer, List<(int, bool)>? model)
     {
         if (model == null)
         {
-            Console.WriteLine(UNSAT);
+            writer.Invoke(UNSAT);
             return;
         }
 
@@ -101,6 +101,6 @@ public class DIMACSParser
         }
 
         builder.Append(EndChar);
-        Console.WriteLine(builder.ToString());
+        writer.Invoke(builder.ToString());
     }
 }

@@ -12,4 +12,4 @@ var parser = new DIMACSParser();
 var cnf = parser.ParseFile(filePath);
 var model = Solver.SolveSat(cnf);
 
-DIMACSParser.WriteModelToConsole(model);
+DIMACSParser.WriteModel(Console.WriteLine, model);
