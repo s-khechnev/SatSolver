@@ -58,40 +58,29 @@ public class DIMACSParser
                 continue;
             }
 
-            var literals = new List<Literal>();
+            var literals = new List<int>();
 
-            foreach (var literal in line.Split(_separator))
+            foreach (var literalStr in line.Split(_separator))
             {
-                if (literal == EndChar)
+                if (literalStr == EndChar)
                     break;
 
-                bool sign;
-                int literalIndex;
-                if (literal[0] == '-')
-                {
-                    sign = false;
-                    literalIndex = Convert.ToInt32(literal[1..]);
-                }
-                else
-                {
-                    sign = true;
-                    literalIndex = Convert.ToInt32(literal);
-                }
+                var literal = Convert.ToInt32(literalStr);
 
-                if (literalIndex > countVars)
+                if (literal > countVars)
                     throw new ArgumentException("Too large variable index");
 
-                literals.Add(new Literal(sign, literalIndex));
+                literals.Add(literal);
             }
 
             clauses.Add(new Clause(literals));
             readLines++;
         }
 
-        return new CNF(clauses, countVars);
+        return new CNF(clauses);
     }
 
-    public static void WriteModelToConsole(List<(Literal, bool)>? model)
+    public static void WriteModelToConsole(List<(int, bool)>? model)
     {
         if (model == null)
         {
@@ -106,7 +95,8 @@ public class DIMACSParser
 
         foreach (var literalValue in model)
         {
-            builder.Append(literalValue.Item2 ? literalValue.Item1.Index.ToString() : $"-{literalValue.Item1.Index}");
+            var abs = Math.Abs(literalValue.Item1);
+            builder.Append(literalValue.Item2 ? abs : -abs);
             builder.Append(' ');
         }
 

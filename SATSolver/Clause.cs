@@ -2,22 +2,20 @@
 
 namespace SATSolver;
 
-public class Clause : ICloneable
+public class Clause
 {
-    public HashSet<Literal> Literals { get; }
+    public HashSet<int> Literals { get; }
 
-    public Clause(IEnumerable<Literal> literals)
+    public Clause(IEnumerable<int> literals)
     {
-        Literals = new HashSet<Literal>(literals);
+        Literals = new HashSet<int>(literals);
     }
 
     public bool IsEmpty => Literals.Count == 0;
 
     public bool IsUnitClause => Literals.Count == 1;
 
-    public Literal NotAssigned => Literals.Single();
-
-    public object Clone() => new Clause(Literals);
+    public int NotAssigned => Literals.Single();
 
     public override string ToString()
     {
@@ -47,14 +45,13 @@ public class Clause : ICloneable
 
             if (x.Literals.Count != y.Literals.Count)
                 return false;
-            
-            var curLitArr = x.Literals.OrderBy(lit => lit.Index).ToArray();
-            var otherLitArr = y.Literals.OrderBy(lit => lit.Index).ToArray();
 
-            return !curLitArr.Where((t, i) => t.Sign != otherLitArr[i].Sign || t.Index != otherLitArr[i].Index).Any();
+            var curLitArr = x.Literals.OrderBy(lit => lit).ToArray();
+            var otherLitArr = y.Literals.OrderBy(lit => lit).ToArray();
+
+            return !curLitArr.Where((t, i) => t != otherLitArr[i]).Any();
         }
 
         public int GetHashCode(Clause obj) => 1;
     }
 }
-

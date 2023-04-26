@@ -2,14 +2,15 @@
 
 public static class Solver
 {
-    private static readonly Dictionary<(Literal, bool), List<(Literal, bool)>> Storage = new();
-    private static readonly (Literal, bool) DummyLiteral = new(new Literal(true, -1), true);
+    private static readonly Dictionary<(int, bool), List<(int, bool)>> Storage = new();
+    private static readonly (int, bool) DummyLiteral = new(0, true);
 
-    public static List<(Literal, bool)>? SolveSat(CNF cnf)
+    public static List<(int, bool)>? SolveSat(CNF cnf)
     {
-        if (!DPLL(cnf, DummyLiteral)) return null;
+        var copy = new CNF(cnf.Clauses);
+        if (!DPLL(copy, DummyLiteral)) return null;
 
-        var model = new List<(Literal, bool)>();
+        var model = new List<(int, bool)>();
 
         model.AddRange(Storage[DummyLiteral]);
         Storage.Remove(DummyLiteral);
@@ -23,45 +24,50 @@ public static class Solver
         if (model.Count != cnf.CountVars)
             model = InitModel(model, cnf.CountVars);
 
-        return model.OrderBy(item => item.Item1.Index).ToList();
+        return model.OrderBy(item => Math.Abs(item.Item1)).ToList();
     }
 
-    private static List<(Literal, bool)> InitModel(List<(Literal, bool)> model, int literalsCount)
+    private static List<(int, bool)> InitModel(List<(int, bool)> model, int literalsCount)
     {
-        var arr = new (Literal, bool)[literalsCount];
+        var arr = new (int, bool)[literalsCount];
         foreach (var literalValue in model)
         {
-            arr[literalValue.Item1.Index - 1] = literalValue;
+            arr[Math.Abs(literalValue.Item1) - 1] = literalValue;
         }
 
         for (var i = 0; i < arr.Length; i++)
         {
-            if (arr[i].Item1 != null)
+            if (arr[i].Item1 != 0)
                 continue;
 
-            arr[i] = (new Literal(true, i + 1), true);
+            arr[i] = (i + 1, true);
         }
 
         return arr.ToList();
     }
 
-    private static bool DPLL(CNF cnf, (Literal, bool) selectedLiteral)
+    private static bool DPLL(CNF cnf, (int, bool) selectedLiteral)
     {
-        Storage[selectedLiteral] = new List<(Literal, bool)>();
+        Storage[selectedLiteral] = new List<(int, bool)>();
 
         while (cnf.UnitClause is { } unitClause)
         {
             var notAssigned = unitClause.NotAssigned;
-            cnf = cnf.PropagateUnit(notAssigned);
+            cnf = cnf.AssignLiteral(notAssigned, notAssigned > 0);
 
-            Storage[selectedLiteral].Add((notAssigned, notAssigned.Sign));
+            Storage[selectedLiteral].Add((notAssigned, notAssigned > 0));
         }
 
-        while (cnf.PureLiteral is { } pureLiteral)
+        while (true)
         {
+            var pureLiteral = cnf.PureLiteral;
+
+            if (pureLiteral == 0)
+                break;
+
             cnf = cnf.EliminatePureLiteral(pureLiteral);
 
-            Storage[selectedLiteral].Add((pureLiteral, pureLiteral.Sign));
+            Storage[selectedLiteral].Add((pureLiteral, pureLiteral > 0));
         }
 
         if (cnf.IsEmpty)
@@ -71,13 +77,14 @@ public static class Solver
             return false;
 
         var randomLiteral = cnf.GetLiteral();
+        var copyCnf = cnf.Clone();
 
-        var isTrueBranch = DPLL(cnf.InsertValueToLiteral(randomLiteral, true), (randomLiteral, true));
+        var isTrueBranch = DPLL(copyCnf.AssignLiteral(randomLiteral, true), (randomLiteral, true));
 
         var isFalseBranch = false;
         if (!isTrueBranch)
         {
-            isFalseBranch = DPLL(cnf.InsertValueToLiteral(randomLiteral, false), (randomLiteral, false));
+            isFalseBranch = DPLL(cnf.AssignLiteral(randomLiteral, false), (randomLiteral, false));
 
             Storage.Remove((randomLiteral, true));
         }

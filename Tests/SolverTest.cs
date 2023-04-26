@@ -8,12 +8,12 @@ public class SolverTest
 
     private readonly string _cnfSat1 = string.Join('\n',
         "c SAT",
-        "p cnf 8 5",
+        "p cnf 7 5",
         "4 -5 3 0",
         "-5 -2 -4 0",
-        "8 -1 2 0",
+        "7 -1 2 0",
         "-3 5 6 0",
-        "2 1 8 0"
+        "2 1 7 0"
     );
 
     [SetUp]
@@ -37,7 +37,7 @@ public class SolverTest
         var cnfSat = _parser.ParseText(_cnfSat1); 
         var someModel = Solver.SolveSat(cnfSat);
 
-        cnfSat = someModel.Aggregate(cnfSat, (current, litValue) => current.InsertValueToLiteral(litValue.Item1, litValue.Item2));
+        cnfSat = someModel.Aggregate(cnfSat, (current, litValue) => current.AssignLiteral(litValue.Item1, litValue.Item2));
         var isEmpty = cnfSat.IsEmpty;
         
         Assert.That(isEmpty, Is.True);

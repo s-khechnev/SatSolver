@@ -2,99 +2,88 @@
 
 namespace SATSolver;
 
+public class AbsComparer : IEqualityComparer<int>
+{
+    public bool Equals(int x, int y) => Math.Abs(x) == Math.Abs(y);
+
+    public int GetHashCode(int obj) => Math.Abs(obj);
+}
+
 public class CNF
 {
-    public int CountVars { get; }
+    public readonly HashSet<Clause> Clauses;
 
-    private readonly HashSet<Clause> _clauses;
-    private readonly HashSet<Literal> _literals;
+    public readonly HashSet<int> PureLiterals;
+    private readonly HashSet<int> _vars;
 
     public CNF(IEnumerable<Clause> clauses)
     {
-        _clauses = new HashSet<Clause>(clauses);
-        _literals = _clauses.SelectMany(clause => clause.Literals).ToHashSet();
-        CountVars = _literals.Count;
-    }
+        Clauses = new HashSet<Clause>();
+        _vars = new HashSet<int>(new AbsComparer());
+        PureLiterals = new HashSet<int>();
 
-    public CNF(IEnumerable<Clause> clauses, int countVars) : this(clauses)
-    {
-        CountVars = countVars;
-    }
-
-    public Clause? UnitClause => _clauses.FirstOrDefault(clause => clause.IsUnitClause);
-
-    public Literal? PureLiteral => GetPureLiteral();
-
-    public bool IsEmpty => _clauses.Count == 0;
-
-    public bool HasEmptyClause => _clauses.Any(clause => clause.IsEmpty);
-
-    public CNF PropagateUnit(Literal notAssigned)
-    {
-        var simplifiedClauses = new HashSet<Clause>(_clauses);
-
-        foreach (var clause in _clauses)
+        foreach (var clause in clauses)
         {
-            if (clause.Literals.TryGetValue(notAssigned, out var sameLiteral))
+            Clauses.Add(clause);
+            foreach (var literal in clause.Literals)
             {
-                if (notAssigned.Sign == sameLiteral.Sign)
-                    simplifiedClauses.Remove(clause);
-                else
-                    clause.Literals.Remove(sameLiteral);
-            }
-        }
-
-        return new(simplifiedClauses);
-    }
-
-    private Literal? GetPureLiteral()
-    {
-        foreach (var uniqueLiteral in _literals)
-        {
-            var isPure = true;
-            foreach (var clause in _clauses)
-            {
-                if (clause.Literals.TryGetValue(uniqueLiteral, out var sameLiteral)
-                    && sameLiteral.Sign != uniqueLiteral.Sign)
+                if (PureLiterals.Contains(-literal))
                 {
-                    isPure = false;
-                    break;
+                    PureLiterals.Remove(-literal);
                 }
+                else if (!_vars.Contains(literal))
+                {
+                    PureLiterals.Add(literal);
+                }
+
+                _vars.Add(literal);
             }
-
-            if (isPure)
-                return uniqueLiteral;
         }
-
-        return null;
     }
 
-    public CNF EliminatePureLiteral(Literal pureLiteral)
+    public int CountVars => _vars.Count;
+
+    public Clause? UnitClause => Clauses.FirstOrDefault(clause => clause.IsUnitClause);
+
+    public int PureLiteral => PureLiterals.FirstOrDefault();
+
+    public bool IsEmpty => Clauses.Count == 0;
+
+    public bool HasEmptyClause => Clauses.Any(clause => clause.IsEmpty);
+
+    public CNF EliminatePureLiteral(int literal)
     {
-        _clauses.RemoveWhere(clause => clause.Literals.Contains(pureLiteral));
-        return new(_clauses);
+        Clauses.RemoveWhere(clause => clause.Literals.Contains(literal));
+        return new(Clauses);
     }
 
-    public Literal GetLiteral() => _literals.First();
+    public int GetLiteral() => _vars.First();
 
-    public CNF InsertValueToLiteral(Literal literal, bool value)
+    public CNF AssignLiteral(int literal, bool value)
     {
-        var clausesDeepClone = _clauses.Select(clause => (Clause)clause.Clone()).ToList();
-
-        var simplifiedClauses = new HashSet<Clause>(clausesDeepClone);
-
-        foreach (var clause in clausesDeepClone)
+        if (literal > 0 == value)
         {
-            if (clause.Literals.TryGetValue(literal, out var sameLiteral))
+            Clauses.RemoveWhere(clause => clause.Literals.Contains(literal));
+            foreach (var clause in Clauses)
             {
-                if (sameLiteral.Sign == value)
-                    simplifiedClauses.Remove(clause);
-                else
-                    clause.Literals.Remove(sameLiteral);
+                clause.Literals.Remove(-literal);
+            }
+        }
+        else
+        {
+            Clauses.RemoveWhere(clause => clause.Literals.Contains(-literal));
+            foreach (var clause in Clauses)
+            {
+                clause.Literals.Remove(literal);
             }
         }
 
-        return new(simplifiedClauses);
+        return new(Clauses);
+    }
+
+    public CNF Clone()
+    {
+        return new CNF(Clauses.Select(clause => new Clause(clause.Literals)));
     }
 
     public override string ToString()
@@ -102,7 +91,7 @@ public class CNF
         var builder = new StringBuilder();
 
         const string separator = " /\\ ";
-        foreach (var clause in _clauses)
+        foreach (var clause in Clauses)
         {
             builder.Append(clause);
             builder.Append(separator);
@@ -128,21 +117,21 @@ public class CNF
             if (ReferenceEquals(y, null)) return false;
             if (x.GetType() != y.GetType()) return false;
 
-            if (x._literals.Count != y._literals.Count || x._clauses.Count != y._clauses.Count)
+            if (x._vars.Count != y._vars.Count || x.Clauses.Count != y.Clauses.Count)
                 return false;
 
-            var curLitArr = x._literals.OrderBy(lit => lit.Index);
-            var otherLitArr = y._literals.OrderBy(lit => lit.Index).ToArray();
+            var curLitArr = x._vars.OrderBy(lit => lit);
+            var otherLitArr = y._vars.OrderBy(lit => lit).ToArray();
 
             if (curLitArr.Where(
-                    (literal, i) => literal.Sign != otherLitArr[i].Sign || literal.Index != otherLitArr[i].Index).Any())
+                    (literal, i) => literal != otherLitArr[i]).Any())
                 return false;
 
-            var shared = x._clauses.Intersect(y._clauses, _clauseComparer);
+            var shared = x.Clauses.Intersect(y.Clauses, _clauseComparer);
 
-            return x._clauses.Count == y._clauses.Count && shared.Count() == x._clauses.Count;
+            return x.Clauses.Count == y.Clauses.Count && shared.Count() == x.Clauses.Count;
         }
 
-        public int GetHashCode(CNF obj) => HashCode.Combine(obj._literals, obj._clauses);
+        public int GetHashCode(CNF obj) => HashCode.Combine(obj._vars, obj.Clauses);
     }
 }

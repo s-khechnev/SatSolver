@@ -18,7 +18,58 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SATSolver\SATSolver.csproj" />
+        <ProjectReference Include="..\SATSolver\SATSolver.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="TestFiles\example.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\examplePureLiteral.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\unsat_100_160.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\unsat_2_3.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\unsat_1_2.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\sat_50_80.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\unsat_50_100.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\sat_200_1200.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\sat_200_680.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\unsat_100_200.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\sat_20_91.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\sat_50_170.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="TestFiles\sat_50_80_2.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="ExtensionsTest\example.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="ExtensionsTest\examplePureLiteral.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="ExtensionsTest\exampleUnitLiteral.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    
 </Project>
